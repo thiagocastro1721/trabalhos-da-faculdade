@@ -1,0 +1,524 @@
+/*
+Algoritmos e Programacao de Computadores - 2/2019
+Aluno: Thiago Pereira de Castro
+Matricula: 190131497
+Turma: B
+Versao do compilador:  gcc 7.4.0
+Descricao: O programa recebe os atributos de uma quantidade t de copos e retorna o tipo de cada copo.
+*/
+#include<stdio.h>
+#include <stdlib.h>
+#include<math.h>
+int main ()
+{
+
+    printf("*****************************************************\n");
+    printf("*                   K VIZINHOS                      *\n");
+    printf("*****************************************************\n\n");
+    printf("O programa recebe os atributos de uma quantidade \nt de copos e retorna o tipo de cada copo.\n\n");
+
+
+    int k = 0, d = 0, quant_copos = 0, i = 0 ,j = 0, cont_copos = 1, tipo;
+
+    /*atributos*/
+    double RI, Na, Mg, Al, Si, K, Ca, Ba, Fe;
+
+    double matriz[214][11];/*Matriz que armazena os dados do arquivo glass.data*/
+    double atributos_copo[10];/*Vetor que armazena os atributos do copo*/
+    double distancia_vs_tipo[214][2];/*Matriz que armazena as distancias e os tipos*/
+    int t_tipos[1000][2];/*Matriz que armazena o tipo cada um dos t copos*/
+
+    /*Declaracoes de funcoes.*/
+    void ler_dados_do_teclado (int *pcont_copos, int *pk, int *pd, int *pquant_copos, double *pRI, double *pNa, double *pMg, double *pAl, double *pSi, double *pK, double *pCa, double *pBa, double *pFe);
+    void verificar_dados(int *pk, int *pd, int *pquant_copos, double *pRI, double *pNa, double *pMg, double *pAl, double *pSi, double *pK, double *pCa, double *pBa, double *pFe);
+    void ler_arquivo_glass_data(double x[214][11]);
+    double fucao_manhatan(double x[214][11], double y[10], double z[214][2]);
+    double fucao_euclidiana(double x[214][11], double y[10], double z[214][2]);
+    void ordenar(double z[214][2]);
+    int k_vizinhos(double z[214][2], int *pk);
+    void armazena_t_tipos(int t_tipos[1000][2], int *ptipo, int *pquant_copos, int *pi);
+    void printa_t_tipos(int t_tipos[1000][2], int *pquant_copos);
+
+    ler_arquivo_glass_data(matriz);
+
+    ler_dados_do_teclado(&cont_copos, &k, &d, &quant_copos, &RI, &Na, &Mg, &Al, &Si, &K, &Ca, &Ba, &Fe);
+    verificar_dados(&k, &d, &quant_copos, &RI, &Na, &Mg, &Al, &Si, &K, &Ca, &Ba, &Fe);
+
+    /*Preenchendo o vetor atributos_copo com os dados fornecidos pelo usuario.*/
+    atributos_copo[0] = 0;/*O primeiro elemento eh zero para eliminar o id na hora de calcular a distancia.*/
+    atributos_copo[1] = RI;
+    atributos_copo[2] = Na;
+    atributos_copo[3] = Mg;
+    atributos_copo[4] = Al;
+    atributos_copo[5] = Si;
+    atributos_copo[6] = K;
+    atributos_copo[7] = Ca;
+    atributos_copo[8] = Ba;
+    atributos_copo[9] = Fe;
+
+    /*Estrutura que decide qual funcao de calculo chamar e depois chama a funcao de ordenacao.*/
+    if(d == 1)
+    {
+        fucao_manhatan(matriz, atributos_copo, distancia_vs_tipo);
+        ordenar(distancia_vs_tipo);
+    }
+    else
+    {
+        fucao_euclidiana(matriz, atributos_copo, distancia_vs_tipo);
+        ordenar(distancia_vs_tipo);
+    }
+
+    /*A variavel int tipo recebe o retorno da funcao k_visinhos.*/
+    tipo = k_vizinhos(distancia_vs_tipo, &k);
+
+    /*Chama a funcao que ira armazenar o tipo de cada copo para poder imprimir todos de uma vez*/
+    armazena_t_tipos(t_tipos, &tipo, &quant_copos, &i);
+
+    for(i = 1; i < quant_copos; i++)
+    {
+        cont_copos++;
+        ler_dados_do_teclado(&cont_copos, &k, &d, &quant_copos, &RI, &Na, &Mg, &Al, &Si, &K, &Ca, &Ba, &Fe);
+        verificar_dados(&k, &d, &quant_copos, &RI, &Na, &Mg, &Al, &Si, &K, &Ca, &Ba, &Fe);
+
+        /*Preenchendo o vetor atributos_copo com os dados fornecidos pelo usuario.*/
+        atributos_copo[0] = 0;
+        atributos_copo[1] = RI;
+        atributos_copo[2] = Na;
+        atributos_copo[3] = Mg;
+        atributos_copo[4] = Al;
+        atributos_copo[5] = Si;
+        atributos_copo[6] = K;
+        atributos_copo[7] = Ca;
+        atributos_copo[8] = Ba;
+        atributos_copo[9] = Fe;
+
+        /*Estrutura que decide qual funcao de calculo chamar e depois chama a funcao de ordenacao.*/
+        if(d == 1)
+        {
+            fucao_manhatan(matriz, atributos_copo, distancia_vs_tipo);
+            ordenar(distancia_vs_tipo);
+        }
+        else
+        {
+            fucao_euclidiana(matriz, atributos_copo, distancia_vs_tipo);
+            ordenar(distancia_vs_tipo);
+        }
+        /*A variavel int tipo recebe o retorno da funcao k_visinhos.*/
+        tipo = k_vizinhos(distancia_vs_tipo, &k);
+
+        /*Chama a funcao que ira armazenar o tipo de cada copo para poder imprimir todos de uma vez*/
+        armazena_t_tipos(t_tipos, &tipo, &quant_copos, &i);
+    }
+
+    printf("********************************************************************************");
+
+    /*Imprime o tipo de cada copo.*/
+    printa_t_tipos(t_tipos, &quant_copos);
+
+    printf("********************************************************************************\n");
+
+    return 0;
+}
+void ler_dados_do_teclado (int *pcont_copos, int *pk, int *pd, int *pquant_copos, double *pRI, double *pNa, double *pMg, double *pAl, double *pSi, double *pK, double *pCa, double *pBa, double *pFe)
+{
+    /* while para ler somente uma vez.*/
+    while(*pk == 0 || *pd == 0 || *pquant_copos == 0)
+    {
+        printf("Cuidado para nao digitar a virgula. Use o ponto.\n\n");
+        printf("Digite o numero k visinhos.\n");
+        scanf("%d", &*pk);
+        printf("\nDigite a funcao de calculo. 1 para Manhatan ou 2 para Euclidiana.\n");
+        scanf("%d", &*pd);
+        printf("\nDigite a quantidade t de copos que serao avaliados.\n");
+        scanf("%d", &*pquant_copos);
+    }
+        /*Instrucoes de entrada de dados*/
+        /*O Resumo Estatistico refere se aos dados contidos no arquivo glass.data*/
+        printf("\nDigite os atributos do copo %d.\n", *pcont_copos);
+        printf("\nRI: refractive index. Resumo Estatistico: Min: 1.5112 Max: 1.5339\n");
+        scanf("%lf", &*pRI);
+        printf("\nNa: Sodium. Resumo Estatistico: Min: 10.73 Max: 17.38\n");
+        scanf("%lf", &*pNa);
+        printf("\nMg: Magnesium. Resumo Estatistico: Min: 0 Max: 4.49\n");
+        scanf("%lf", &*pMg);
+        printf("\nAl: Aluminum. Resumo Estatistico: Min: 0.29 Max: 3.5\n");
+        scanf("%lf", &*pAl);
+        printf("\nSi: Silicon. Resumo Estatistico: Min: 69.81 Max: 75.41\n");
+        scanf("%lf", &*pSi);
+        printf("\nK: Potassium. Resumo Estatistico: Min: 0 Max: 6.21\n");
+        scanf("%lf", &*pK);
+        printf("\nCa: Calcium. Resumo Estatistico: Min: 5.43 Max: 16.19\n");
+        scanf("%lf", &*pCa);
+        printf("\nBa: Barium. Resumo Estatistico: Min: 0 Max: 3.15\n");
+        scanf("%lf", &*pBa);
+        printf("\nFe: Iron. Resumo Estatistico: Min: 0 Max: 0.51\n");
+        scanf("%lf", &*pFe);
+
+}
+void verificar_dados(int *pk, int *pd, int *pquant_copos, double *pRI, double *pNa, double *pMg, double *pAl, double *pSi, double *pK, double *pCa, double *pBa, double *pFe)
+{
+    /*Verificando a variavel k*/
+    while(*pk <= 0 || *pk > 15 || *pk%2 == 0)
+    {
+        printf("\nErro.k deve ser um numero inteiro impar maior que 0 e menor que 16.\n");
+        printf("\nDigite k novamente\n");
+        scanf("%d", &*pk);
+    }
+
+    /*Verificando a variavel d.*/
+    while(*pd < 1 || *pd > 2)
+    {
+        printf("\nErro. d so poder ser 1 ou 2.\n");
+        printf("\nDigite d novamente.\n");
+        scanf("%d", &*pd);
+    }
+
+    /*Verificando a variavel quant_copos*/
+    while(*pquant_copos < 0)
+    {
+        printf("\nErro.A quantidade de copos a serem classificados\n deve ser um numero inteiro positivo.\n");
+        printf("\nDigite quantidade de copos novamente\n");
+        scanf("%d", &*pquant_copos);
+    }
+
+    /*Verificando a variavel RI: refractive index Min: 1.5112 Max: 1.5339.*/
+    while(*pRI < 0)
+    {
+        printf("\nErro. RI deve ser um numero real positipo.\n");
+        printf("\nDigite RI novamente.\n");
+        scanf("%lf", &*pRI);
+    }
+
+    /*Verificando a variavel Na: Sodium Min: 10.73 Max: 17.38.*/
+    while(*pNa < 0)
+    {
+        printf("\nErro. Na deve ser um numero real positivo.\n");
+        printf("\nDigite Na novamente.\n");
+        scanf("%lf", &*pNa);
+    }
+
+    /*Verificando a variavel Mg: Magnesium Min: 0 Max: 4.49.*/
+    while(*pMg < 0)
+    {
+        printf("\nErro. Mg deve ser um numero real positivo.\n");
+        printf("\nDigite Na novamente.\n");
+        scanf("%lf", &*pMg);
+    }
+
+    /*Verificando a variavel Al: Aluminum Min: 0.29 Max: 3.5.*/
+    while(*pAl < 0)
+    {
+        printf("\nErro. Al deve ser um numero real positivo.\n");
+        printf("\nDigite Al novamente.\n");
+        scanf("%lf", &*pAl);
+    }
+
+    /*Verificando a variavel Si: Silicon Min: 69.81 Max: 75.41.*/
+    while(*pSi < 0)
+    {
+        printf("\nErro. Si deve ser um numero real positivo.\n");
+        printf("\nDigite Si novamente.\n");
+        scanf("%lf", &*pSi);
+    }
+
+    /*Verificando a variavel K: Potassium Min: 0 Max: 6.21.*/
+    while(*pK < 0)
+    {
+        printf("\nErro. K deve ser um numero real positivo.\n");
+        printf("\nDigite K novamente.\n");
+        scanf("%lf", &*pK);
+    }
+
+    /*Verificando a variavel Ca: Calcium Min: 5.43 Max: 16.19.*/
+    while(*pCa < 0)
+    {
+        printf("\nErro. Ca deve ser um numero real positivo.\n");
+        printf("\nDigite Ca novamente.\n");
+        scanf("%lf", &*pCa);
+    }
+
+    /*Verificando a variavel Ba: Barium Min: 0 Max: 3.15.*/
+    while(*pBa < 0)
+    {
+        printf("\nErro. Ba deve ser um numero real positivo.\n");
+        printf("\nDigite Ba novamente.\n");
+        scanf("%lf", &*pBa);
+    }
+
+    /*Verificando a variavel Fe: Iron Min: 0 Max: 0.51.*/
+    while(*pFe < 0)
+    {
+        printf("\nErro. Fe deve ser um numero real positivo.\n");
+        printf("\nDigite Fe novamente.\n");
+        scanf("%lf", &*pFe);
+    }
+
+}
+
+void ler_arquivo_glass_data(double x[214][11])
+{
+    printf("\nFUNCAO LER_ARQUIVO_GLASS_DATA.\n");
+    int i, j;
+    double aId = 0, aRI = 0, aNa = 0, aMg = 0, aAl = 0, aSi = 0, aK = 0, aCa = 0, aBa = 0, aFe = 0, aCat = 0;
+    double elemento;
+    /*criando a variavel ponteiro para o arquivo.*/
+    FILE *file;
+
+    /*abrindo o arquivo em modo somente leitura*/
+    file = fopen("glass.data","r");
+
+    if(file == NULL)
+    {
+        printf("\n\tERRO.\n");
+        printf("\n\tArquivo nao pode ser aberto.\n");
+        printf("\tO arquivo glass.data e o codigo fonte podem nao estar na mesma pasta.\n");
+        exit(0);
+    }
+    else
+    {
+        printf("\n\tArquivo aberto com sucesso.\n\tDados copiados na memoria.\n\tArquivo fechado.\n\n");
+    }
+
+    /*Preenchendo a matriz com os valores do arquivo.*/
+    for(i = 0; i < 214; i++)
+    {
+        fscanf(file, "\n%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n", &aId, &aRI, &aNa, &aMg, &aAl, &aSi, &aK, &aCa, &aBa, &aFe, &aCat);
+
+        x[i][0] = aId;
+        x[i][1] = aRI;
+        x[i][2] = aNa;
+        x[i][3] = aMg;
+        x[i][4] = aAl;
+        x[i][5] = aSi;
+        x[i][6] = aK;
+        x[i][7] = aCa;
+        x[i][8] = aBa;
+        x[i][9] = aFe;
+        x[i][10] = aCat;
+    }
+
+    /*fechando o arquivo*/
+    fclose(file);
+
+}
+
+double fucao_manhatan(double x[214][11], double y[10], double z[214][2])
+{
+    printf("\nFUNCAO MANHATAN.\n\n");
+    int i,j;
+
+    double distancia = 0;
+
+    /*zerando a primeira coluna da matriz x.*/
+    for(i = 0;i < 214;i++)
+    {
+        x[i][0] = 0;
+    }
+
+    /*preenchendo a segunda coluna da matris z diferencas com os tipos dos copos da matriz de dados.*/
+    for(i = 0; i < 214; i++)
+    {
+        z[i][1] = x[i][10];
+    }
+
+    /*calculando distancias e guardando no vetor z.*/
+    for(i = 0;i < 214; i++)
+    {
+        for(j = 0;j < 10; j++)
+        {
+          distancia = distancia + fabs(x[i][j] - y[j]);
+        }
+        z[i][0] = distancia;
+        distancia = 0;
+    }
+
+    return 0;
+}
+
+double fucao_euclidiana(double x[214][11], double y[10], double z[214][2])
+{
+    printf("FUNCAO EUCLIDIANA.\n\n");
+
+    int i,j;
+    double distancia = 0;
+
+    /*zerando a primeira coluna da matriz x.*/
+    for(i = 0;i < 214;i++)
+    {
+        x[i][0] = 0;
+    }
+
+    /*preenchendo a segunda coluna da matris z distancia_vs_tipo com os tipos dos copos da matriz  x de dados.*/
+    for(i = 0; i < 214; i++)
+    {
+        z[i][1] = x[i][10];
+    }
+
+    /*calculando distancias e guardando no vetor z distancia_vs_tipo.*/
+    for(i = 0;i < 214; i++)
+    {
+        for(j = 0;j < 10; j++)
+        {
+          distancia = distancia + pow(x[i][j] - y[j],2);
+        }
+        z[i][0] = distancia;
+        distancia = 0;
+    }
+
+    return 0;
+}
+
+void ordenar(double z[214][2])
+{
+    printf("FUNCAO ORDENAR.\n\n");
+
+    int i, j;
+    double temp_1, temp_2;
+
+    /*for aninhado para ordenar*/
+    for(i = 0; i < 214; i++)
+    {
+        for(j = i + 1; j < 214; j++)
+        {
+            /*Se o elemento for maior que o elemento da posicao seguinte, entao eles trocam de lugar.*/
+            if(z[i][0] > z[j][0])
+            {
+                /*trocar de lugar as distancias.*/
+                temp_1 = z[i][0];
+                z[i][0] = z[j][0];
+                z[j][0] = temp_1;
+
+                /*trocar de lugar tambem os tipos.*/
+                temp_2 = z[i][1];
+                z[i][1] = z[j][1];
+                z[j][1] = temp_2;
+            }
+
+        }
+    }
+
+    printf("\tMatriz distancia_vs_tipo ORDENADA.\n\n");
+    for(i = 0;i < 214 ;i++)
+    {
+        for(j = 0; j < 2; j++)
+        {
+            printf("\t%lf ", z[i][j]);
+        }
+        printf("\n");
+    }
+
+}
+
+int k_vizinhos(double z[214][2], int *pk)
+{
+    printf("\nFUNCAO K_VISINHOS.\n");
+
+    int i, j, tipo, temp_1, temp_2;
+    int tipo_vs_repeticao[6][2] = {1,0,2,0,3,0,5,0,6,0,7,0};
+
+    /*Contando as repeticoes dos tipos.*/
+    for(i = *pk - 1; i >= 0 ; i--)
+    {
+        if(z[i][1] == 1)
+        {
+            tipo_vs_repeticao[0][1] = tipo_vs_repeticao[0][1] + 1;
+        }
+        if(z[i][1] == 2)
+        {
+            tipo_vs_repeticao[1][1] = tipo_vs_repeticao[1][1] + 1;
+        }
+        if(z[i][1] == 3)
+        {
+            tipo_vs_repeticao[2][1] = tipo_vs_repeticao[2][1] + 1;
+        }
+        if(z[i][1] == 5)
+        {
+            tipo_vs_repeticao[3][1] = tipo_vs_repeticao[3][1] + 1;
+        }
+        if(z[i][1] == 6)
+        {
+            tipo_vs_repeticao[4][1] = tipo_vs_repeticao[4][1] + 1;
+        }
+        if(z[i][1] == 7)
+        {
+            tipo_vs_repeticao[5][1] = tipo_vs_repeticao[5][1] + 1;
+        }
+
+    }
+
+    /*Ordenar as quantidades de repeticoes na matriz tipo_vs_repeticao da maior para menor*/
+    for(i = 0; i < 6; i++)
+    {
+        for(j = i + 1; j < 6; j++)
+        {
+            /*Se o elemento for menor que o elemento da posicao seguinte, entao eles trocam de lugar.*/
+            if(tipo_vs_repeticao[i][1] < tipo_vs_repeticao[j][1])
+            {
+                /*trocar de lugar as repeticoes.*/
+                temp_1 = tipo_vs_repeticao[i][0];
+                tipo_vs_repeticao[i][0] = tipo_vs_repeticao[j][0];
+                tipo_vs_repeticao[j][0] = temp_1;
+
+                /*trocar de lugar tambem os tipos.*/
+                temp_2 = tipo_vs_repeticao[i][1];
+                tipo_vs_repeticao[i][1] = tipo_vs_repeticao[j][1];
+                tipo_vs_repeticao[j][1] = temp_2;
+            }
+
+        }
+
+    }
+
+        printf("\n\tImprimindo a matriz TIPO_VS_REPETICAO ORDENADA do maior para o menor:\n\n");
+        for(i = 0; i < 6; i++)
+        {
+            printf("\t");
+             for(j = 0; j < 2; j++)
+             {
+                 printf("%d ", tipo_vs_repeticao[i][j]);
+             }
+             printf("\n");
+        }
+
+         /*Em caso de empate sera considerado o tipo com a menor distancia.*/
+         /*Se a distancia for zero, entao o tipo sera aquele relacionado.*/
+        if(tipo_vs_repeticao[0][1] == tipo_vs_repeticao[1][1] || z[0][0] == 0)
+        {
+            tipo = z[0][1];
+        }
+        else
+        {
+            /*O tipo sera o primeiro elemento da matriz tipo_vs_repeticao apos ter sido ordenada do maior para o menor.*/
+            tipo = tipo_vs_repeticao[0][0];
+        }
+
+    return (tipo);
+}
+
+void armazena_t_tipos(int t_tipos[1000][2], int *ptipo, int *pquant_copos, int *pi)
+{
+    t_tipos[*pi][0] = *pi + 1;
+    t_tipos[*pi][1] = *ptipo;
+}
+
+void printa_t_tipos(int t_tipos[1000][2], int *pquant_copos)
+{
+    int i;
+    for(i = 0; i < *pquant_copos; i++)
+    {
+        printf("Tipo do copo %d: %d ", i + 1, t_tipos[i][1]);
+
+        if(t_tipos[i][1] == 1)
+            printf("building_windows_float_processed.\n");
+        if(t_tipos[i][1] == 2)
+            printf("building_windows_non_float_processed.\n");
+        if(t_tipos[i][1] == 3)
+            printf("vehicle_windows_float_processed.\n");
+        if(t_tipos[i][1] == 5)
+            printf("containers.\n");
+        if(t_tipos[i][1] == 6)
+            printf("tableware.\n");
+        if(t_tipos[i][1] == 7)
+            printf("headlamps.\n");
+    }
+}
